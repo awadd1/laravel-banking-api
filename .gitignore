@@ -1,0 +1,31 @@
+# Laravel
+/vendor
+/node_modules
+/public/storage
+/public/build
+/public/hot
+/storage/*.key
+.env
+.env.*
+.phpunit.*
+composer.lock
+
+# IDEs and editors
+/.vscode
+/.idea
+/.fleet
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and debug
+npm-debug.log
+yarn-error.log
+
+# Homestead / Vagrant
+Homestead.json
+Homestead.yaml
+
+# Auth files
+auth.json
