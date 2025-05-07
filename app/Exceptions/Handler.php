@@ -10,6 +10,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -105,6 +106,15 @@ class Handler extends ExceptionHandler
                 ]);
             }
 
+            if ($e instanceof MethodNotAllowedHttpException) {
+                return $this->apiResponse([
+                    'message' => $e->getMessage(),
+                    'success' => false,
+                    'exception' => $e,
+                    'error_code' => Response::HTTP_METHOD_NOT_ALLOWED,
+                ], Response::HTTP_METHOD_NOT_ALLOWED);
+            }
+
             if ($e instanceof \Exception) {
                 $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR;
                 return $this->apiResponse([
@@ -113,6 +123,33 @@ class Handler extends ExceptionHandler
                     'exception' => $e,
                     'error_code' => $statusCode,
                 ]);
+            }
+
+            if ($e instanceof PinNotSetException) {
+                return $this->apiResponse([
+                    'message' => $e->getMessage(),
+                    'success' => false,
+                    'exception' => $e,
+                    'error_code' => Response::HTTP_BAD_REQUEST,
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if ($e instanceof InvalidPinLengthException) {
+                return $this->apiResponse([
+                    'message' => $e->getMessage(),
+                    'success' => false,
+                    'exception' => $e,
+                    'error_code' => Response::HTTP_BAD_REQUEST,
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if ($e instanceof PinHasAlreadyBeenSetException) {
+                return $this->apiResponse([
+                    'message' => $e->getMessage(),
+                    'success' => false,
+                    'exception' => $e,
+                    'error_code' => Response::HTTP_BAD_REQUEST,
+                ], Response::HTTP_BAD_REQUEST);
             }
 
             if ($e instanceof \Error) {
