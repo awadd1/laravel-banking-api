@@ -59,6 +59,7 @@ class UserService implements UserServiceInterface
     return $user->pin != null;
   }
 
+
   public function getUserById(int $userId): Builder|Model
   {
     $user = User::query()->where('id', $userId)->first();
