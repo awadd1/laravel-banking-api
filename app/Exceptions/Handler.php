@@ -133,7 +133,7 @@ class Handler extends ExceptionHandler
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            if ($e instanceof PinHasAlreadyBeenSetException) {
+             if ($e instanceof PinHasAlreadyBeenSetException) {
                 return $this->apiResponse([
                     'message' => $e->getMessage(),
                     'success' => false,
@@ -142,7 +142,25 @@ class Handler extends ExceptionHandler
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            if ($e instanceof AccountNumberExistsException) {
+             if ($e instanceof AccountNumberExistsException) {
+                return $this->apiResponse([
+                    'message' => $e->getMessage(),
+                    'success' => false,
+                    'exception' => $e,
+                    'error_code' => Response::HTTP_BAD_REQUEST,
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if ($e instanceof DepositAmountToLowException) {
+                return $this->apiResponse([
+                    'message' => $e->getMessage(),
+                    'success' => false,
+                    'exception' => $e,
+                    'error_code' => Response::HTTP_BAD_REQUEST,
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+             if ($e instanceof InvalidAccountNumberException) {
                 return $this->apiResponse([
                     'message' => $e->getMessage(),
                     'success' => false,

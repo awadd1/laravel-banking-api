@@ -16,9 +16,9 @@ return new class extends Migration
             $table->string('reference')->index('transaction_reference_index');
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('account_id')->constrained('accounts');
-            $table->foreignId('transfer_id')->constrained('accounts');
+            $table->foreignId('transfer_id')->nullable()->constrained('transfers')->nullOnDelete();
             $table->decimal('amount', 16, 4);
-            $table->decimal('balance', 16, 4);
+            $table->decimal('balance', 16, 4)->nullable();
             $table->string('category'); //deposit or  withdrawal
             $table->boolean('confirmed')->default(0);
             $table->string('description')->nullable();
