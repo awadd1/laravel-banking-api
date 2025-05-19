@@ -2,7 +2,9 @@
 
 namespace App\Interfaces;
 
+use App\Dtos\AccountDto;
 use App\Dtos\DepositDto;
+use App\Dtos\WithdrawDto;
 use App\Dtos\TransactionDto;
 use App\Dtos\UserDto;
 use App\Models\Account;
@@ -21,6 +23,10 @@ interface AccountServiceInterface
   public function getAccount(int|string $accountNumberOrUserId): Account;
 
   public function deposit(DepositDto $depositDto): TransactionDto;
+
+  public function withdraw(WithdrawDto $WithdrawDto): TransactionDto;
+
+  public function canWithdraw(AccountDto $accountDto, WithdrawDto $withdrawDto): bool;
 
   public function accountExist(Builder $accountQuery): void;
 }

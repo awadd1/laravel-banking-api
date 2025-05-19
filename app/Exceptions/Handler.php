@@ -56,7 +56,7 @@ class Handler extends ExceptionHandler
                 ], $statusCode);
             }
 
-           if ($e instanceof NotFoundHttpException) {
+            if ($e instanceof NotFoundHttpException) {
                 return $this->apiResponse([
                     'message' => $e->getMessage(),
                     'success' => false,
@@ -133,7 +133,7 @@ class Handler extends ExceptionHandler
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-             if ($e instanceof PinHasAlreadyBeenSetException) {
+            if ($e instanceof PinHasAlreadyBeenSetException) {
                 return $this->apiResponse([
                     'message' => $e->getMessage(),
                     'success' => false,
@@ -142,7 +142,7 @@ class Handler extends ExceptionHandler
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-             if ($e instanceof AccountNumberExistsException) {
+            if ($e instanceof AccountNumberExistsException) {
                 return $this->apiResponse([
                     'message' => $e->getMessage(),
                     'success' => false,
@@ -160,7 +160,7 @@ class Handler extends ExceptionHandler
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-             if ($e instanceof InvalidAccountNumberException) {
+            if ($e instanceof InvalidAccountNumberException) {
                 return $this->apiResponse([
                     'message' => $e->getMessage(),
                     'success' => false,
@@ -168,6 +168,25 @@ class Handler extends ExceptionHandler
                     'error_code' => Response::HTTP_BAD_REQUEST,
                 ], Response::HTTP_BAD_REQUEST);
             }
+
+            if ($e instanceof WithdrawalAmountTooLowException) {
+                return $this->apiResponse([
+                    'message' => $e->getMessage(),
+                    'success' => false,
+                    'exception' => $e,
+                    'error_code' => Response::HTTP_BAD_REQUEST,
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if ($e instanceof InvalidPinException) {
+                return $this->apiResponse([
+                    'message' => $e->getMessage(),
+                    'success' => false,
+                    'exception' => $e,
+                    'error_code' => Response::HTTP_BAD_REQUEST,
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
 
             if ($e instanceof \Exception) {
                 $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR;

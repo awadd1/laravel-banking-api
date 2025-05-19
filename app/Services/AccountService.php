@@ -3,14 +3,22 @@
 namespace App\Services;
 
 use App\Dtos\AccountDto;
+use App\Dtos\WithdrawDto;
 use App\Dtos\DepositDto;
 use App\Dtos\TransactionDto;
 use App\Models\Account;
 use App\Dtos\UserDto;
 use App\Events\DepositEvent;
+use App\Events\TransactionEvent;
 use App\Exceptions\AccountNumberExistsException;
+use App\Exceptions\ANotFoundException;
 use App\Exceptions\DepositAmountToLowException;
 use App\Exceptions\InvalidAccountNumberException;
+use App\Exceptions\InvalidPinException;
+use App\Exceptions\WithdrawalAmountTooLowException;
+use App\Exceptions\InsufficientBalanceException;
+
+
 use  \Illuminate\Database\Eloquent\Builder;
 use App\Interfaces\AccountServiceInterface;
 use Illuminate\Support\Facades\DB;
@@ -57,7 +65,12 @@ class AccountService implements AccountServiceInterface
 
   public function getAccountByUserId(int $userId): Account
   {
-    throw new LogicException('Method not implemented yet.');
+      $account = $this->modelQuery()->where('user_id', $userId)->first();
+        if (!$account) {
+            throw new ANotFoundException("Account number could not be found");
+        }
+        
+        return $account;
 
   }
 
@@ -87,7 +100,7 @@ class AccountService implements AccountServiceInterface
           $depositDto->getAmount(),
           $depositDto->getDescription(),
       );
-        event(new DepositEvent($transactionDto, $accountDto, $lockedAccount));
+        event(new TransactionEvent($transactionDto, $accountDto, $lockedAccount));
         DB::commit();
         return $transactionDto;
     } catch (\Exception $exception) {
@@ -102,5 +115,50 @@ class AccountService implements AccountServiceInterface
     if(!$accountQuery->exists()){
       throw new InvalidAccountNumberException();
     }
+  }
+
+  public function withdraw(WithdrawDto $withdrawDto): TransactionDto
+  {
+
+    $minimum_withdrawal = 500;
+    if ($withdrawDto->getAmount() < $minimum_withdrawal) {
+        throw new WithdrawalAmountTooLowException($minimum_withdrawal);
+    }
+    try {
+        DB::beginTransaction();
+        $accountQuery = $this->modelQuery()->where('account_number', $withdrawDto->getAccountNumber());
+        $this->accountExist($accountQuery);
+        $lockedAccount = $accountQuery->lockForUpdate()->first();
+        $accountDto = AccountDto::fromModel($lockedAccount);
+        if (!$this->userService->validatePin($accountDto->getUserId(), $withdrawDto->getPin())) {
+            throw new InvalidPinException();
+        }
+        $this->canWithdraw($accountDto, $withdrawDto);
+        $transactionDto = new TransactionDto();
+        $transactionDto = $transactionDto->forWithdrawal(
+            $accountDto,
+            $this->transactionService->generateReference(),
+            $withdrawDto
+        );
+
+        event(new TransactionEvent($transactionDto, $accountDto, $lockedAccount));
+        DB::commit();
+        return $transactionDto;
+    } catch (\Exception $ex) {
+        DB::rollBack();
+        throw $ex;
+    }
+  }
+
+  public function canWithdraw(AccountDto $accountDto, WithdrawDto $withdrawDto): bool
+  {
+      // if the account is blocked
+      // if the user has not exceeded their transaction limit for the day or month
+      // if the amount to withdraw greater than the user balance
+      if ($accountDto->getBalance() < $withdrawDto->getAmount()) {
+          throw new InsufficientBalanceException();
+      }
+      // if the amount left after withdrawal is not more than the minimum account balance
+      return true;
   }
 }

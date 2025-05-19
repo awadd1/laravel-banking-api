@@ -189,6 +189,20 @@ class TransactionDto
      return $dto;
   }
 
+  public function forWithdrawal(AccountDto $accountDto, string $reference, WithdrawDto $withdrawDto): self
+  {
+     $dto = new TransactionDto();
+     $dto->setUserId($accountDto->getUserId())
+        ->setReference($reference)
+        ->setAccountId($accountDto->getId())
+        ->setTransferId(null)
+        ->setAmount($withdrawDto->getAmount())
+        ->setDate(Carbon::now())
+        ->setCategory($withdrawDto->getCategory())
+        ->setDescription($withdrawDto->getDescription());
+     return $dto;
+  }
+
   public function forDepositToArray(TransactionDto $transactionDto): array
   {
     return [
@@ -201,6 +215,19 @@ class TransactionDto
         'description' => $transactionDto->getDescription(),
     ];
   }
+
+ public function forWithdrawalToArray(TransactionDto $transactionDto): array
+ {
+    return [
+        'amount' => $transactionDto->getAmount(),
+        'user_id' => $transactionDto->getUserId(),
+        'reference' => $transactionDto->getReference(),
+        'account_id' => $transactionDto->getAccountId(),
+        'category' => $transactionDto->getCategory(),
+        'date' => $transactionDto->getDate(),
+        'description' => $transactionDto->getDescription(),
+    ];
+ }
 
 
 }
