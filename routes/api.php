@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountDepositController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AccountWithdrawalController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PinController;
 use Illuminate\Http\Request;
@@ -46,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function() {
 Route::middleware('has.set.pin')->group(function () {
     Route::prefix('account')->group(function () {
         Route::post('deposit', [AccountDepositController::class, 'store']);
+        Route::post('withdraw', [AccountWithdrawalController::class, 'store']);
     });
 
 });

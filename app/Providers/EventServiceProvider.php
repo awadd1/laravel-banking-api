@@ -1,8 +1,11 @@
 <?php
 
 namespace App\Providers;
-use App\Events\DepositEvent;
+
+
+use App\Events\TransactionEvent;
 use App\Listeners\DepositListener;
+use App\Listeners\WithdrawalListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -20,9 +23,10 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
 
-        DepositEvent::class => [
-           DepositListener::class
-        ],
+        TransactionEvent::class => [
+            DepositListener::class,
+            WithdrawalListener::class
+        ]
     ];
 
     /**
