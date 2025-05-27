@@ -56,7 +56,9 @@ class TransactionService implements TransactionServiceInterface
 
   public function updateTransferID(string $reference, int $transferID)
   {
-     throw new LogicException('Method not implemented yet.');
+    $this->modelQuery()->where('reference', $reference)->update([
+      'transfer_id' => $transferID
+    ]);
   }
 
   public function getTransactionByReference(string $reference): Transaction

@@ -4,6 +4,7 @@ namespace App\Interfaces;
 
 use App\Dtos\AccountDto;
 use App\Dtos\DepositDto;
+use App\Dtos\TransferDto;
 use App\Dtos\WithdrawDto;
 use App\Dtos\TransactionDto;
 use App\Dtos\UserDto;
@@ -25,6 +26,8 @@ interface AccountServiceInterface
   public function deposit(DepositDto $depositDto): TransactionDto;
 
   public function withdraw(WithdrawDto $WithdrawDto): TransactionDto;
+
+  public function transfer(string $senderAccountNumber, string $receiverAccountNumber, string $senderAccountPin, int|float $amount, string $description = null): TransferDto;
 
   public function canWithdraw(AccountDto $accountDto, WithdrawDto $withdrawDto): bool;
 
