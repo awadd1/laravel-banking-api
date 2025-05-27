@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Dtos\AccountDto;
+use App\Dtos\TransferDto;
 use App\Dtos\WithdrawDto;
 use App\Dtos\DepositDto;
 use App\Dtos\TransactionDto;
@@ -28,8 +29,9 @@ class AccountService implements AccountServiceInterface
 
   public function __construct(
     private readonly UserService $userService,
-    private readonly TransactionService $transactionService
-    ) {
+    private readonly TransactionService $transactionService,
+    private readonly TransferService $transferService,
+  ) {
   }
 
   public function modelQuery(): Builder
@@ -147,6 +149,83 @@ class AccountService implements AccountServiceInterface
     } catch (\Exception $ex) {
         DB::rollBack();
         throw $ex;
+    }
+  }
+
+  public function transfer(string $senderAccountNumber, string $receiverAccountNumber, string $senderAccountPin, int|float $amount, string $description = null): TransferDto
+  {
+    if ($senderAccountNumber == $receiverAccountNumber) {
+      throw new \Exception("Receiver and Sender Account number can not be the same");
+    }
+    $minimum_withdrawal = 300;
+    try {
+      
+      DB::beginTransaction();
+      $senderAccountQuery   = $this->modelQuery()->where('account_number', operator: $senderAccountNumber);
+      $receiverAccountQuery = $this->modelQuery()->where('account_number', operator: $receiverAccountNumber);
+
+      $this->accountExist($senderAccountQuery);
+      $this->accountExist($receiverAccountQuery);
+
+      $lockedSenderAccount      = $senderAccountQuery->lockForUpdate()->first();
+      $lockedReceiverAccount    = $receiverAccountQuery->lockForUpdate()->first();
+      $lockedSenderAccountDto   = AccountDto::fromModel($lockedSenderAccount);
+      $lockedReceiverAccountDto = AccountDto::fromModel($lockedReceiverAccount);
+
+      if (!$this->userService->validatePin($lockedSenderAccountDto->getUserId(), $senderAccountPin)) {
+        throw new InvalidPinException();
+      }
+ 
+      $transactionDto = new TransactionDto();
+      $withdrawDto    = new WithdrawDto();
+      $depositDto     = new DepositDto();
+      $transferDto    = new TransferDto();
+
+      $withdrawDto->setAccountNumber($lockedSenderAccountDto->getAccountNumber());
+      $withdrawDto->setAmount($amount);
+      $withdrawDto->setDescription($description);
+      $withdrawDto->setPin($senderAccountPin);
+
+
+      $depositDto->setAccountNumber($lockedReceiverAccountDto->getAccountNumber());
+      $depositDto->setAmount($amount);
+      $depositDto->setDescription($description);
+
+      $this->canWithdraw($lockedSenderAccountDto, $withdrawDto);
+
+      $transactionWithdrawalDto = $transactionDto->forWithdrawal(
+        $lockedSenderAccountDto,
+        $this->transactionService->generateReference(),
+        $withdrawDto
+      );
+
+      $transactionDepositDto = $transactionDto->forDeposit(
+        $lockedReceiverAccountDto,
+        $this->transactionService->generateReference(),
+        $depositDto->getAmount(),
+        $depositDto->getDescription(),
+      );
+
+      $transferDto->setReference($this->transferService->generateReference());
+      $transferDto->setSenderId($lockedSenderAccountDto->getUserId());
+      $transferDto->setSenderAccountId($lockedSenderAccountDto->getId());
+      $transferDto->setRecepientAccountId($lockedReceiverAccountDto->getUserId());
+      $transferDto->setRecepientId($lockedReceiverAccountDto->getId());
+      $transferDto->setAmount($amount);
+      $transferDto->setStatus('success');
+
+      $transfer = $this->transferService->createTransfer($transferDto);
+      
+      $transactionWithdrawalDto->setTransferId($transfer->id);
+      $transactionDepositDto->setTransferId($transfer->id);
+
+      event(new TransactionEvent($transactionWithdrawalDto, $lockedSenderAccountDto, $lockedSenderAccount));
+      event(new TransactionEvent($transactionDepositDto, $lockedReceiverAccountDto, $lockedReceiverAccount));
+      DB::commit();
+      return $transferDto;
+    } catch (\Exception $ex) {
+      DB::rollBack();
+      throw $ex;
     }
   }
 
