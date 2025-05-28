@@ -63,21 +63,31 @@ class TransactionService implements TransactionServiceInterface
 
   public function getTransactionByReference(string $reference): Transaction
   {
-    throw new LogicException('Method not implemented yet.');
+    $transaction = $this->modelQuery()->where('reference', $reference)->first();
+    if (!$transaction) {
+      throw new ANotFoundException("transaction with the supplied reference does not exist");
+    }
+    return $transaction;
   }
 
   public function getTransactionById(int $transactionID): Transaction
   {
-    throw new LogicException('Method not implemented yet.');
+    $transaction = $this->modelQuery()->where('id', $transactionID)->first();
+    if (!$transaction) {
+      throw new ANotFoundException("transaction with the supplied id does not exist");
+    }
+    return $transaction;
   }
 
   public function getTransactionsByAccountNumber(int $accountNumber, Builder $builder): Builder
   {
-    throw new LogicException('Method not implemented yet.');
+    return $builder->whereHas('account', function ($query) use ($accountNumber) {
+      $query->where('account_number', $accountNumber);
+    });
   }
 
   public function getTransactionsByUserId(int $userID, Builder $builder): Builder
   {
-    throw new LogicException('Method not implemented yet.');
+    return $builder->where('user_id', $userID);
   }
 }
